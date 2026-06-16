@@ -23,6 +23,14 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
+	klog.InitFlags(nil)
+	err := flag.Set("v", "4")
+	if err != nil {
+		fmt.Printf("Failed to set log level: %v\n", err)
+	}
+
+	flag.Parse()
+
 	command := newCommand()
 	if err := command.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
