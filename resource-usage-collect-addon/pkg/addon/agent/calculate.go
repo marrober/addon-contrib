@@ -145,26 +145,26 @@ func (s *Score) normalizeScore(scope string, cpuAvailable, memAvailable, gpuAvai
 	// Add a parameter that identifies whether the current scope is "cluster scope" or "node scope".
 	klog.Infof("[%s] cpuAvailable = %v, memAvailable = %v, gpuAvailable = %v, tpuAvailable = %v", scope, cpuAvailable, memAvailable, gpuAvailable, tpuAvailable)
 
-	cpuScoreNormalizer := clustersdkv1alpha1.NewScoreNormalizer(MINCPUCOUNT, MAXCPUCOUNT)
+	cpuScoreNormalizer := score.NewScoreNormalizer(MINCPUCOUNT, MAXCPUCOUNT)
 	cpuScore, err = cpuScoreNormalizer.Normalize(cpuAvailable)
 	if err != nil {
 		return 0, 0, 0, 0, err
 	}
 
 	availableMem := memAvailable / 1024 * 1024 // MB
-	memScoreNormalizer := clustersdkv1alpha1.NewScoreNormalizer(MINMEMCOUNT, MAXMEMCOUNT)
+	memScoreNormalizer := score.NewScoreNormalizer(MINMEMCOUNT, MAXMEMCOUNT)
 	memScore, err = memScoreNormalizer.Normalize(availableMem)
 	if err != nil {
 		return 0, 0, 0, 0, err
 	}
 
-	gpuScoreNormalizer := clustersdkv1alpha1.NewScoreNormalizer(MINGPUCOUNT, MAXGPUCOUNT)
+	gpuScoreNormalizer := score.NewScoreNormalizer(MINGPUCOUNT, MAXGPUCOUNT)
 	gpuScore, err = gpuScoreNormalizer.Normalize(gpuAvailable)
 	if err != nil {
 		return 0, 0, 0, 0, err
 	}
 
-	tpuScoreNormalizer := clustersdkv1alpha1.NewScoreNormalizer(MINTPUCOUNT, MAXTPUCOUNT)
+	tpuScoreNormalizer := score.NewScoreNormalizer(MINTPUCOUNT, MAXTPUCOUNT)
 	tpuScore, err = tpuScoreNormalizer.Normalize(tpuAvailable)
 	if err != nil {
 		return 0, 0, 0, 0, err
