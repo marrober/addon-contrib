@@ -50,10 +50,9 @@ spec:
                 serviceAccount: resource-usage-collect-agent-sa
                 containers:
                   - name: resource-usage-collect-agent
-                    image: example-addon-image
+                    image: resource-collection-agent-image
                     imagePullPolicy: IfNotPresent
                     args:
-                      - "/addon"
                       - "agent"
                       - "--hub-kubeconfig={{HUB_KUBECONFIG}}"
                       - "--cluster-name={{CLUSTER_NAME}}"

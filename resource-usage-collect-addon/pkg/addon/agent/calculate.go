@@ -121,6 +121,7 @@ func (s *Score) calculateClusterAvailable(resourceName string) (float64, error) 
 		alloc, exists := node.Status.Allocatable[v1.ResourceName(resourceName)]
 		if exists {
 			totalAllocatable += alloc.AsApproximateFloat64()
+			klog.Infof("allocatable for the node = %v", alloc.AsApproximateFloat64())
 		}
 
 		// Calculate the resource usage for this node
@@ -128,6 +129,7 @@ func (s *Score) calculateClusterAvailable(resourceName string) (float64, error) 
 		if err != nil {
 			return 0, err
 		}
+		klog.Infof("used for the node = %v", usage)
 		totalUsage += usage
 	}
 

@@ -1,11 +1,12 @@
 resources:
+- resources/namespace.yaml
 - resources/addon-template.yaml
 - resources/cluster-management-addon.yaml
 - resources/cluster-role.yaml
 - resources/placement.yaml
 
 images:
-- name: example-addon-image
+- name: resource-collection-agent-image
   newName: quay.io/marrober/resource-usage-collect-addon
   newTag: '2'
 apiVersion: kustomize.config.k8s.io/v1beta1
