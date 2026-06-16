@@ -117,7 +117,7 @@ func (s *Score) calculateClusterAvailable(resourceName string) (float64, error) 
 			continue
 		}
 
-		klog.Infof("Node :: %s", node)
+		klog.Infof("Node :: %s", node.Name)
 
 		// Accumulate allocatable resources from all nodes
 		alloc, exists := node.Status.Allocatable[v1.ResourceName(resourceName)]
