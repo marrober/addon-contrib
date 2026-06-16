@@ -75,6 +75,14 @@ func (s *Score) calculateNodeScore() (cpuScore int32, memScore int32, gpuScore i
 // Calculate the available resources in the cluster scope and return four scores for CPU, Memory, GPU, and TPU.
 func (s *Score) calculateClusterScopeScore() (cpuScore int32, memScore int32, gpuScore int32, tpuScore int32, err error) {
 	// Get the total available CPU resources across the cluster.
+
+	klog.InitFlags(nil)
+	err := flag.Set("v", "4")
+	if err != nil {
+		fmt.Printf("Failed to set log level: %v\n", err)
+	}
+	flag.Parse()
+
 	cpuAvailable, err := s.calculateClusterAvailable(string(clusterv1.ResourceCPU))
 	if err != nil {
 		return 0, 0, 0, 0, err
