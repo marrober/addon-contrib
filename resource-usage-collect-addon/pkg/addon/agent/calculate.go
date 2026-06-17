@@ -7,7 +7,6 @@ import (
 	corev1lister "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
 	clusterv1 "open-cluster-management.io/api/cluster/v1"
-	clustersdkv1alpha1 "open-cluster-management.io/sdk-go/pkg/apis/cluster/v1alpha1"
 )
 
 // MAXCPUCOUNT Constants for CPU resource counts
@@ -137,6 +136,8 @@ func (s *Score) calculateClusterAvailable(resourceName string) (float64, error) 
 
 	// Calculate available resources
 	available := totalAllocatable - totalUsage
+
+	klog.Infof("Total : %v, Used : %v, Available : %v", totalAllocatable, totalUsage, available)
 	return available, nil
 }
 
@@ -145,26 +146,38 @@ func (s *Score) normalizeScore(scope string, cpuAvailable, memAvailable, gpuAvai
 	// Add a parameter that identifies whether the current scope is "cluster scope" or "node scope".
 	klog.Infof("[%s] cpuAvailable = %v, memAvailable = %v, gpuAvailable = %v, tpuAvailable = %v", scope, cpuAvailable, memAvailable, gpuAvailable, tpuAvailable)
 
-	cpuScoreNormalizer := score.NewScoreNormalizer(MINCPUCOUNT, MAXCPUCOUNT)
+	klog.Infof("CPU Score normalizer")
+	klog.Infof("Min CPU : %v, max CPU : %v, available : %v", MINCPUCOUNT, MAXCPUCOUNT, cpuAvailable)
+
+	cpuScoreNormalizer := NewScoreNormalizer(MINCPUCOUNT, MAXCPUCOUNT)
 	cpuScore, err = cpuScoreNormalizer.Normalize(cpuAvailable)
 	if err != nil {
 		return 0, 0, 0, 0, err
 	}
 
 	availableMem := memAvailable / 1024 * 1024 // MB
-	memScoreNormalizer := score.NewScoreNormalizer(MINMEMCOUNT, MAXMEMCOUNT)
+
+	klog.Infof("Memory Score normalizer")
+	klog.Infof("Min memory : %v, max memory : %v, available : %v reported  mem avail : %v", MINMEMCOUNT, MAXMEMCOUNT, availableMem, memAvailable)
+	memScoreNormalizer := NewScoreNormalizer(MINMEMCOUNT, MAXMEMCOUNT)
 	memScore, err = memScoreNormalizer.Normalize(availableMem)
 	if err != nil {
 		return 0, 0, 0, 0, err
 	}
 
-	gpuScoreNormalizer := score.NewScoreNormalizer(MINGPUCOUNT, MAXGPUCOUNT)
+	klog.Infof("GPU Score normalizer")
+	klog.Infof("Min gpu : %v, max gpu : %v, available : %v", MINGPUCOUNT, MAXGPUCOUNT, gpuAvailable)
+
+	gpuScoreNormalizer := NewScoreNormalizer(MINGPUCOUNT, MAXGPUCOUNT)
 	gpuScore, err = gpuScoreNormalizer.Normalize(gpuAvailable)
 	if err != nil {
 		return 0, 0, 0, 0, err
 	}
 
-	tpuScoreNormalizer := score.NewScoreNormalizer(MINTPUCOUNT, MAXTPUCOUNT)
+	klog.Infof("TPU Score normalizer")
+	klog.Infof("Min tpu : %v, max tpu : %v, available : %v", MINTPUCOUNT, MAXTPUCOUNT, tpuAvailable)	
+
+	tpuScoreNormalizer := NewScoreNormalizer(MINTPUCOUNT, MAXTPUCOUNT)
 	tpuScore, err = tpuScoreNormalizer.Normalize(tpuAvailable)
 	if err != nil {
 		return 0, 0, 0, 0, err
@@ -279,4 +292,39 @@ func (s *Score) getRequestForResource(resource string, requests *v1.ResourceList
 		}
 		return quantity.AsApproximateFloat64()
 	}
+}
+
+
+// MaxScore is the upper bound of the normalized score.
+const MaxScore = 100
+
+// MinScore is the lower bound of the normalized score.
+const MinScore = -100
+
+// ScoreNormalizer holds the minimum and maximum values for normalization,
+// provides a normalize library to generate scores for AddOnPlacementScore.
+type ScoreNormalizer struct {
+	min float64
+	max float64
+}
+
+// NewScoreNormalizer creates a new instance of ScoreNormalizer with given min and max values.
+func NewScoreNormalizer(min, max float64) *ScoreNormalizer {
+	return &ScoreNormalizer{
+		min: min,
+		max: max,
+	}
+}
+
+// Normalize normalizes a given value to the range -100 to 100 based on the min and max values.
+func (s *ScoreNormalizer) Normalize(value float64) (score int32, err error) {
+	if value > s.max {
+		score = MaxScore
+	} else if value <= s.min {
+		score = MinScore
+	} else {
+		score = (int32)((MaxScore-MinScore)*(value-s.min)/(s.max-s.min) + MinScore)
+	}
+	klog.Infof("MaxScore = %v, MinScore = %v, value = %v, min = %v, max = %v, score = %v", MaxScore, MinScore, value, s.min, s.max, score)
+	return score, nil
 }
