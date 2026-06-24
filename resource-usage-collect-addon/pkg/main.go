@@ -9,6 +9,7 @@ import (
 	"k8s.io/component-base/logs"
 	"math/rand"
 	"open-cluster-management.io/addon-contrib/resource-usage-collect-addon/pkg/addon/agent"
+	addoncmd "open-cluster-management.io/addon-contrib/resource-usage-collect-addon/pkg/cmd"
 	"open-cluster-management.io/addon-framework/pkg/version"
 	"os"
 	"time"
@@ -48,5 +49,7 @@ func newCommand() *cobra.Command {
 		cmd.Version = v
 	}
 	cmd.AddCommand(agent.NewAgentCommand("resource-usage-collect-addon"))
+
+	cmd.PersistentFlags().BoolVarP(&addoncmd.InfoLevel, "verbose", "v", false, "enable verbose information messages")
 	return cmd
 }

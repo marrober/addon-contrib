@@ -6,6 +6,7 @@ import (
 	corev1informers "k8s.io/client-go/informers/core/v1"
 	corev1lister "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
+	"open-cluster-management.io/addon-contrib/resource-usage-collect-addon/pkg/cmd"
 	clusterv1 "open-cluster-management.io/api/cluster/v1"
 )
 
@@ -116,13 +117,17 @@ func (s *Score) calculateClusterAvailable(resourceName string) (float64, error) 
 			continue
 		}
 
-		klog.Infof("Resource : %s      Node : %s", resourceName, node.Name)
+		if cmd.InfoLevel {
+			klog.Infof("Resource : %s      Node : %s", resourceName, node.Name)
+		}
 
 		// Accumulate allocatable resources from all nodes
 		alloc, exists := node.Status.Allocatable[v1.ResourceName(resourceName)]
 		if exists {
 			totalAllocatable += alloc.AsApproximateFloat64()
-			klog.Infof("allocatable for the node = %v", alloc.AsApproximateFloat64())
+			if cmd.InfoLevel {
+				klog.Infof("allocatable for the node = %v", alloc.AsApproximateFloat64())
+			}
 		}
 
 		// Calculate the resource usage for this node
@@ -130,14 +135,18 @@ func (s *Score) calculateClusterAvailable(resourceName string) (float64, error) 
 		if err != nil {
 			return 0, err
 		}
-		klog.Infof("used for the node = %v", usage)
+		if cmd.InfoLevel {
+			klog.Infof("used for the node = %v", usage)
+		}
 		totalUsage += usage
 	}
 
 	// Calculate available resources
 	available := totalAllocatable - totalUsage
 
-	klog.Infof("Total : %v, Used : %v, Available : %v", totalAllocatable, totalUsage, available)
+	if cmd.InfoLevel {
+		klog.Infof("Total : %v, Used : %v, Available : %v", totalAllocatable, totalUsage, available)
+	}
 	return available, nil
 }
 
@@ -146,8 +155,10 @@ func (s *Score) normalizeScore(scope string, cpuAvailable, memAvailable, gpuAvai
 	// Add a parameter that identifies whether the current scope is "cluster scope" or "node scope".
 	klog.Infof("[%s] cpuAvailable = %v, memAvailable = %v, gpuAvailable = %v, tpuAvailable = %v", scope, cpuAvailable, memAvailable, gpuAvailable, tpuAvailable)
 
-	klog.Infof("CPU Score normalizer")
-	klog.Infof("Min CPU : %v, max CPU : %v, available : %v", MINCPUCOUNT, MAXCPUCOUNT, cpuAvailable)
+	if cmd.InfoLevel {
+		klog.Infof("CPU Score normalizer")
+		klog.Infof("Min CPU : %v, max CPU : %v, available : %v", MINCPUCOUNT, MAXCPUCOUNT, cpuAvailable)
+	}
 
 	cpuScoreNormalizer := NewScoreNormalizer(MINCPUCOUNT, MAXCPUCOUNT)
 	cpuScore, err = cpuScoreNormalizer.Normalize(cpuAvailable)
@@ -155,18 +166,21 @@ func (s *Score) normalizeScore(scope string, cpuAvailable, memAvailable, gpuAvai
 		return 0, 0, 0, 0, err
 	}
 
-	availableMem := memAvailable / 1024 * 1024 // MB
+	availableMem := memAvailable / (1024 * 1024) // MB
 
-	klog.Infof("Memory Score normalizer")
-	klog.Infof("Min memory : %v, max memory : %v, available : %v reported  mem avail : %v", MINMEMCOUNT, MAXMEMCOUNT, availableMem, memAvailable)
+	if cmd.InfoLevel {
+		klog.Infof("Memory Score normalizer")
+		klog.Infof("Min memory : %v, max memory : %v, available : %v reported  mem avail : %v", MINMEMCOUNT, MAXMEMCOUNT, availableMem, memAvailable)
+	}
 	memScoreNormalizer := NewScoreNormalizer(MINMEMCOUNT, MAXMEMCOUNT)
 	memScore, err = memScoreNormalizer.Normalize(availableMem)
 	if err != nil {
 		return 0, 0, 0, 0, err
 	}
-
-	klog.Infof("GPU Score normalizer")
-	klog.Infof("Min gpu : %v, max gpu : %v, available : %v", MINGPUCOUNT, MAXGPUCOUNT, gpuAvailable)
+	if cmd.InfoLevel {
+		klog.Infof("GPU Score normalizer")
+		klog.Infof("Min gpu : %v, max gpu : %v, available : %v", MINGPUCOUNT, MAXGPUCOUNT, gpuAvailable)
+	}
 
 	gpuScoreNormalizer := NewScoreNormalizer(MINGPUCOUNT, MAXGPUCOUNT)
 	gpuScore, err = gpuScoreNormalizer.Normalize(gpuAvailable)
@@ -174,8 +188,10 @@ func (s *Score) normalizeScore(scope string, cpuAvailable, memAvailable, gpuAvai
 		return 0, 0, 0, 0, err
 	}
 
-	klog.Infof("TPU Score normalizer")
-	klog.Infof("Min tpu : %v, max tpu : %v, available : %v", MINTPUCOUNT, MAXTPUCOUNT, tpuAvailable)	
+	if cmd.InfoLevel {
+		klog.Infof("TPU Score normalizer")
+		klog.Infof("Min tpu : %v, max tpu : %v, available : %v", MINTPUCOUNT, MAXTPUCOUNT, tpuAvailable)	
+	}
 
 	tpuScoreNormalizer := NewScoreNormalizer(MINTPUCOUNT, MAXTPUCOUNT)
 	tpuScore, err = tpuScoreNormalizer.Normalize(tpuAvailable)
@@ -218,7 +234,9 @@ func (s *Score) calculateMaxAvailableNode(resourceName string) (float64, string,
 			maxNodeName = node.Name
 		}
 	}
-	klog.Infof("Max available %s: %f on node: %s", resourceName, maxAvailable, maxNodeName)
+	if cmd.InfoLevel {
+		klog.Infof("Max available %s: %f on node: %s", resourceName, maxAvailable, maxNodeName)
+	}
 	return maxAvailable, maxNodeName, nil
 }
 
@@ -325,6 +343,8 @@ func (s *ScoreNormalizer) Normalize(value float64) (score int32, err error) {
 	} else {
 		score = (int32)((MaxScore-MinScore)*(value-s.min)/(s.max-s.min) + MinScore)
 	}
-	klog.Infof("MaxScore = %v, MinScore = %v, value = %v, min = %v, max = %v, score = %v", MaxScore, MinScore, value, s.min, s.max, score)
+	if cmd.InfoLevel {
+		klog.Infof("Normaliser function : MaxScore = %v, MinScore = %v, value = %v, min = %v, max = %v, score = %v", MaxScore, MinScore, value, s.min, s.max, score)
+	}
 	return score, nil
 }

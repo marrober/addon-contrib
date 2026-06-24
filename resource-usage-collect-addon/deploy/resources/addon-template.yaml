@@ -57,6 +57,7 @@ spec:
                       - "--hub-kubeconfig={{HUB_KUBECONFIG}}"
                       - "--cluster-name={{CLUSTER_NAME}}"
                       - "--addon-namespace=open-cluster-management-agent-addon"
+#                      - "--verbose"
         - kind: ServiceAccount
           apiVersion: v1
           metadata:
