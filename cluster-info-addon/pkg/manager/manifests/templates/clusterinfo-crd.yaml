@@ -1,0 +1,131 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.2
+  creationTimestamp: null
+  name: clusterinfos.clusterinfo.open-cluster-management.io
+spec:
+  group: clusterinfo.open-cluster-management.io
+  names:
+    kind: ClusterInfo
+    listKind: ClusterInfoList
+    plural: clusterinfos
+    singular: clusterinfo
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ClusterInfo is the Schema for the clusterinfos API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ClusterInfoSpec defines the desired state of ClusterInfo
+            type: object
+          status:
+            description: ClusterInfoStatus defines the observed state of ClusterInfo
+            properties:
+              clusterInfo:
+                description: ClusterInfo contains cluster version and operator information as a single JSON object.
+                properties:
+                  clusterName:
+                    description: ClusterName is the name of the managed cluster this information was collected from.
+                    type: string
+                  clusterOperators:
+                    description: ClusterOperators lists OpenShift cluster operators and their versions/status.
+                    items:
+                      description: ClusterOperatorInfo reports version and status for an OpenShift cluster operator.
+                      properties:
+                        available:
+                          description: Available is the Available condition status.
+                          type: string
+                        degraded:
+                          description: Degraded is the Degraded condition status.
+                          type: string
+                        message:
+                          description: Message provides additional detail from operator conditions.
+                          type: string
+                        name:
+                          description: Name is the cluster operator name.
+                          type: string
+                        progressing:
+                          description: Progressing is the Progressing condition status.
+                          type: string
+                        status:
+                          description: Status is a summary of the operator health.
+                          type: string
+                        version:
+                          description: Version is the operator version.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                  clusterVersion:
+                    description: ClusterVersion is the OpenShift cluster version and its status.
+                    properties:
+                      message:
+                        description: Message provides additional detail when the cluster version is not healthy.
+                        type: string
+                      status:
+                        description: Status is a summary of the cluster version health.
+                        type: string
+                      version:
+                        description: Version is the desired cluster version.
+                        type: string
+                    type: object
+                  installedOperators:
+                    description: InstalledOperators lists OLM-installed operators from ClusterServiceVersions across all namespaces.
+                    items:
+                      description: InstalledOperatorInfo reports version and status for an OLM-installed operator (CSV).
+                      properties:
+                        message:
+                          description: Message provides additional detail from the CSV status.
+                          type: string
+                        name:
+                          description: Name is the ClusterServiceVersion name.
+                          type: string
+                        namespace:
+                          description: Namespace is the namespace of the ClusterServiceVersion.
+                          type: string
+                        phase:
+                          description: Phase is the CSV status phase (e.g. Succeeded, Failed).
+                          type: string
+                        status:
+                          description: Status is a summary of the operator health.
+                          type: string
+                        version:
+                          description: Version is the operator version from the CSV spec.
+                          type: string
+                      required:
+                      - name
+                      - namespace
+                      type: object
+                    type: array
+                type: object
+              lastSync:
+                description: LastSync is the last time cluster version and operator information was collected.
+                format: date-time
+                type: string
+              spokeURL:
+                description: SpokeURL is the url of spoke cluster
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

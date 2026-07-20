@@ -1,0 +1,81 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .SpokeRolebindingName }}-agent
+  namespace: {{ .AddonInstallNamespace }}
+rules:
+  # Allow addon agent run with openshift library-go
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs: 
+      - get
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs: 
+      - '*'
+  - apiGroups:
+      - apps
+    resources:
+      - replicasets
+    verbs: 
+      - get
+  - apiGroups:
+      - ""
+      - events.k8s.io
+    resources:
+      - events
+    verbs: 
+      - create
+      - patch
+      - update
+  # Allow addon agent run with addon
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - '*'
+  # Allow addon agent to read OpenShift cluster version and cluster operators
+  - apiGroups:
+      - config.openshift.io
+    resources:
+      - clusterversions
+      - clusteroperators
+    verbs:
+      - get
+      - list
+      - watch
+  # Allow addon agent to read OLM ClusterServiceVersions (equivalent to oc get csv -A)
+  - apiGroups:
+      - operators.coreos.com
+    resources:
+      - clusterserviceversions
+    verbs:
+      - get
+      - list
+      - watch
+  # Allow addon agent run with clusterinfo
+  - apiGroups:
+      - clusterinfo.open-cluster-management.io
+    resources:
+      - clusterinfos
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - clusterinfo.open-cluster-management.io
+    resources:
+      - clusterinfos/status
+    verbs:
+      - update
+      - patch

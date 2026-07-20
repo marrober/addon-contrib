@@ -1,0 +1,6 @@
+apiVersion: clusterinfo.open-cluster-management.io/v1alpha1
+kind: ClusterInfo
+metadata:
+  name: clusterinfo
+#status:
+#  spokeURL: hello

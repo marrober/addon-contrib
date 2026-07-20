@@ -1,0 +1,8 @@
+apiVersion: addon.open-cluster-management.io/v1alpha1
+kind: ClusterManagementAddOn
+metadata:
+  name: cluster-info-addon
+spec:
+  addOnMeta:
+    displayName: ClusterInfo Addon
+    description: "cluster-info-addon collects OpenShift cluster version and operator information from managed clusters and syncs it to the hub"

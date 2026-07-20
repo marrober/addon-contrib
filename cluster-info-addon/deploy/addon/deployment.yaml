@@ -1,0 +1,24 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: cluster-info-addon-manager
+  namespace: open-cluster-management
+  labels:
+    app: cluster-info-addon-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-info-addon-manager
+  template:
+    metadata:
+      labels:
+        app: cluster-info-addon-manager
+    spec:
+      serviceAccountName: cluster-info-addon-sa
+      containers:
+      - name: cluster-info-addon-manager
+        image: quay.io/open-cluster-management/addon-contrib/cluster-info-addon:latest
+        imagePullPolicy: IfNotPresent
+        args:
+          - "manager"
